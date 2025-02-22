@@ -3,7 +3,7 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main  # main 브랜치에 푸시될 때 자동 배포
+      - main # main 브랜치에 푸시될 때 자동 배포
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
     - name: Deploy to EC2
       env:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-        HOST: 43.203.27.157
+        HOST: 43.203.27.157  # 실제 EC2 퍼블릭 IP
         USER: ec2-user
       run: |
         echo "$PRIVATE_KEY" > private_key.pem
