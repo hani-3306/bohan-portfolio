@@ -3,7 +3,7 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main # main 브랜치에 푸시될 때 자동 배포
+      - main
 
 jobs:
   deploy:
@@ -13,16 +13,34 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Debug SSH Key (확인용)
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+      run: |
+        if [[ -z "$PRIVATE_KEY" ]]; then
+          echo "❌ EC2_SSH_KEY가 GitHub에서 전달되지 않음!"
+          exit 1
+        else
+          echo "✅ EC2_SSH_KEY가 정상적으로 GitHub에서 전달됨!"
+        fi
+
     - name: Deploy to EC2
       env:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-        HOST: 43.203.27.157  # 실제 EC2 퍼블릭 IP
+        HOST: 43.203.27.157  # 여기에 EC2 퍼블릭 IP 입력
         USER: ec2-user
       run: |
         echo "$PRIVATE_KEY" > private_key.pem
         chmod 600 private_key.pem
+
+        echo "🔍 EC2에 SSH 접속 테스트..."
+        ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST "echo '🚀 SSH 연결 성공!'"
+
+        echo "🔄 코드 업데이트 시작..."
         ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << 'EOF'
           cd /usr/share/nginx/bohan-portfolio
           sudo git pull origin main
           sudo systemctl restart nginx
         EOF
+
+        echo "✅ 배포 완료!"
